@@ -1,0 +1,16 @@
+syntax="proto3";
+
+package api;
+option go_package = "github.com/Nikita99100/Fibonacci/pkg/api";
+service Fibonacci{
+  rpc FibonacciSequence(FibonacciRequest) returns (FibonacciResponse) {}
+}
+
+message FibonacciRequest{
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message FibonacciResponse{
+  repeated int64 result = 1;
+}

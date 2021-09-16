@@ -7,10 +7,10 @@ import (
 )
 
 type fibonacciResponse struct {
-	Sequence []int `json:"sequence"`
+	Sequence []int64 `json:"sequence"`
 }
 
-func newFibonacciResponse(seq []int) fibonacciResponse {
+func newFibonacciResponse(seq []int64) fibonacciResponse {
 	return fibonacciResponse{
 		Sequence: seq,
 	}
