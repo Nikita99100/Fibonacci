@@ -15,6 +15,7 @@ func newFibonacciResponse(seq []int) fibonacciResponse {
 		Sequence: seq,
 	}
 }
+
 func (r *Rest) fibonacci(c echo.Context) error {
 	//get x parameter
 	x, err := strconv.Atoi(c.QueryParam("x"))
@@ -29,7 +30,7 @@ func (r *Rest) fibonacci(c echo.Context) error {
 	//get and response fibonacci sequence
 	seq, err := r.Handler.GetFibonacciSequence(x, y)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, newFibonacciResponse(seq))
 }
