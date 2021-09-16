@@ -1,3 +1,3 @@
-[Application]
 RestPort = "80"
 GrpcPort = "8080"
+MemcacheAddress = "127.0.0.1:11211"
