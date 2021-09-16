@@ -26,6 +26,7 @@ func main() {
 	configPath := flag.String("config", defaultConfigPath, "configuration file path")
 	flag.Parse()
 
+	// Parse and set configs
 	cfg, err := config.Parse(*configPath)
 	if err != nil {
 		log.Fatalf("failed to parse the config file: %v", err)
@@ -33,12 +34,11 @@ func main() {
 	restPort := cfg.RestPort
 	grpcPort := cfg.GrpcPort
 	memcacheAddress := cfg.MemcacheAddress
-	flag.Parse()
 
 	//Create memcache client
 	mc := memcache.New(memcacheAddress)
 	if err := mc.Ping(); err != nil {
-		log.Fatal(errors.Wrap(err, "Failed to connect to memcache server"))
+		log.Print(errors.Wrap(err, "Failed to connect to memcache server"))
 	}
 
 	// Create a handler object
