@@ -2,16 +2,21 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/Nikita99100/Fibonacci/handler"
 	"github.com/Nikita99100/Fibonacci/pkg/api"
+	"github.com/Nikita99100/Fibonacci/pkg/os"
+	"github.com/Nikita99100/Fibonacci/pkg/web"
 	"github.com/Nikita99100/Fibonacci/server"
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"log"
-	"net"
+	"time"
+)
+
+const (
+	restServerShutdownTimeout = 30 * time.Second
 )
 
 func main() {
@@ -20,8 +25,6 @@ func main() {
 	grpcPort := flag.String("rpc", "8080", "gRPC port")
 	memcacheAddress := flag.String("cache", "127.0.0.1:11211", "memcache address")
 	flag.Parse()
-	println("server port:", *restPort)
-	println("api port:", *grpcPort)
 
 	//Create memcache client
 	mc := memcache.New(*memcacheAddress)
@@ -30,21 +33,7 @@ func main() {
 	}
 
 	// Create a handler object
-	hdlr := handler.Handler{
-		Cache: mc,
-	}
-
-	grpcS := grpc.NewServer()
-	grpcServ := &server.GRPCServer{Handler: &hdlr}
-	api.RegisterFibonacciServer(grpcS, grpcServ)
-	grpcLis, err := net.Listen("tcp", fmt.Sprintf(":%v", *grpcPort))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	log.Printf("server listening at %v", grpcLis.Addr())
-	if err := grpcS.Serve(grpcLis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	hdlr := handler.Handler{Cache: mc}
 
 	// Create a rest server gateway and handle http requests
 	router := echo.New()
@@ -53,9 +42,16 @@ func main() {
 		Handler: &hdlr,
 	}
 	rest.Route()
+	// Start an http server and remember to shut it down
+	go web.Start(router, *restPort)
+	defer web.Stop(router, restServerShutdownTimeout)
 
-	//start rest server
-	if err := router.Start(fmt.Sprintf(":%v", *restPort)); err != nil {
-		log.Fatal(errors.Wrap(err, "Failed to start rest server"))
-	}
+	// Start a grpc server
+	grpcS := grpc.NewServer()
+	grpcServ := &server.GRPCServer{Handler: &hdlr}
+	go api.Start(grpcS, grpcServ, *grpcPort)
+	defer grpcS.Stop()
+
+	// Wait for program exit
+	<-os.NotifyAboutExit()
 }
