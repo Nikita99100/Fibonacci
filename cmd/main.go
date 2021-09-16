@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Nikita99100/Fibonacci/handler"
 	"github.com/Nikita99100/Fibonacci/server"
+	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"log"
@@ -18,10 +19,15 @@ func main() {
 	println("server port:", *restPort)
 	println("grpc port:", *grpcPort)
 
-	// Create a handler object
-	hdlr := handler.Handler{}
+	//Create memcache client
+	mc := memcache.New("127.0.0.1:11211")
 
-	// Create a server gateway and handle http requests
+	// Create a handler object
+	hdlr := handler.Handler{
+		Cache: mc,
+	}
+
+	// Create a rest server gateway and handle http requests
 	router := echo.New()
 	rest := server.Rest{
 		Router:  router,
@@ -29,8 +35,8 @@ func main() {
 	}
 	rest.Route()
 
-	//start server server
+	//start rest server
 	if err := router.Start(fmt.Sprintf(":%v", *restPort)); err != nil {
-		log.Fatal(errors.Wrap(err, "Failed to start server server"))
+		log.Fatal(errors.Wrap(err, "Failed to start rest server"))
 	}
 }

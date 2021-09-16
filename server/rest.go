@@ -13,8 +13,9 @@ type Rest struct {
 
 func (r *Rest) Route() {
 	r.Router.GET("/", r.hello)
+	r.Router.GET("/fibonacci", r.fibonacci)
 }
 
 func (r *Rest) hello(c echo.Context) error {
-	return c.JSON(http.StatusOK, "hello")
+	return c.HTML(http.StatusOK, "<h1>Hello</h1>")
 }
